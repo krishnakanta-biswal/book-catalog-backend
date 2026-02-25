@@ -1,80 +1,127 @@
 import Book from "../models/Book.js";
+import mongoose from "mongoose";
 
 export const createBook = async (req, res) => {
   try {
-    const book = await Book.create(req.body);
+    const { title, author, genre, price, inStock } = req.body;
 
-    res.status(201).json({
-      success: true,
-      message: "Book created successfully",
-      data: book
+    if (!title || !author || !genre || price === undefined || inStock === undefined) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
+
+    const book = await Book.create({
+      title,
+      author,
+      genre,
+      price,
+      inStock
     });
+
+    res.status(201).json(book);
+
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: "Invalid data"
+    res.status(500).json({
+      message: "Server error"
     });
   }
 };
 
 export const getAllBooks = async (req, res) => {
-  const books = await Book.find();
-
-  res.status(200).json({
-    success: true,
-    data: books
-  });
+  try {
+    const books = await Book.find();
+    res.status(200).json(books);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
 };
 
 export const getBookById = async (req, res) => {
-  const book = await Book.findById(req.params.id);
+  try {
+    const { id } = req.params;
 
-  if (!book) {
-    return res.status(404).json({
-      success: false,
-      message: "Book not found"
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid book ID"
+      });
+    }
+
+    const book = await Book.findById(id);
+
+    if (!book) {
+      return res.status(404).json({
+        message: "Book not found"
+      });
+    }
+
+    res.status(200).json(book);
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error"
     });
   }
-
-  res.status(200).json({
-    success: true,
-    data: book
-  });
 };
 
 export const updateBook = async (req, res) => {
-  const book = await Book.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-  );
+  try {
+    const { id } = req.params;
 
-  if (!book) {
-    return res.status(404).json({
-      success: false,
-      message: "Book not found"
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid book ID"
+      });
+    }
+
+    const book = await Book.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true }
+    );
+
+    if (!book) {
+      return res.status(404).json({
+        message: "Book not found"
+      });
+    }
+
+    res.status(200).json(book);
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error"
     });
   }
-
-  res.status(200).json({
-    success: true,
-    message: "Book updated",
-    data: book
-  });
 };
 
 export const deleteBook = async (req, res) => {
-  const book = await Book.findByIdAndDelete(req.params.id);
+  try {
+    const { id } = req.params;
 
-  if (!book) {
-    return res.status(404).json({
-      success: false,
-      message: "Book not found"
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid book ID"
+      });
+    }
+
+    const book = await Book.findByIdAndDelete(id);
+
+    if (!book) {
+      return res.status(404).json({
+        message: "Book not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "Book deleted successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error"
     });
   }
-
-  res.status(200).json({
-    success: true,
-    message: "Book deleted"
-  });
 };
